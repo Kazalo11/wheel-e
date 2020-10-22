@@ -24,7 +24,7 @@ void loop() {
     Serial.println(" - L_Very bright");
   }
 
-  Serial.print("right light sensor reading = ");
+  /*Serial.print("right light sensor reading = ");
   Serial.print(right_light_s);   // the raw analog reading
   
   if (right_light_s < 10) {
@@ -37,7 +37,7 @@ void loop() {
     Serial.println(" - R_Bright");
   } else {
     Serial.println(" - R_Very bright");
-  }
+  } */
 
   
   delay(500);
