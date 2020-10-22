@@ -39,15 +39,19 @@ void line_follower() {
 
     derivative = error - previous_error;
     D = Kd * derivative;
-
-    Serial.print("left light sensor reading = ");
-    Serial.print(left_light_s);   // the raw analog reading
-    Serial.print("right light sensor reading = ");
-    Serial.print(right_light_s);   // the raw analog reading
+    Serial.print("error: ");
+    Serial.print(error);
+    
+    //Serial.print(previous_error);
+//    Serial.print("left light sensor reading = ");
+//    Serial.print(left_light_s);   // the raw analog reading
+//    Serial.print("right light sensor reading = ");
+//    Serial.print(right_light_s);   // the raw analog reading
     previous_error = error;
 
     PID_value = P + I + D;
-
+    Serial.print("PID_value: ");
+    Serial.print(PID_value);
     delay(500); //not sure about this
 
 }

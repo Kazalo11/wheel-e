@@ -39,6 +39,7 @@ void loop() {
     Serial.println(" - R_Very bright");
   }
 
+ // serial.printin(
   
   delay(500);
 }
