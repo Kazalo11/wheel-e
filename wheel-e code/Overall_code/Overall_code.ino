@@ -1,5 +1,5 @@
 //PID setup
-float Kp = 25;
+float Kp = 25;  //K values to be caibrated
 float Ki = 0;
 float Kd = 15;
 float error = 0, derivative = 0, integral = 0, P = 0, I = 0, D = 0, PID_value = 0;
@@ -18,10 +18,11 @@ void setup() {
 }
 
 void loop() {
-  line_follower(); //takes analogue values of light sensors and outputs PID_value for controlling motors 
+  line_follower() //takes analogue values of light sensors and outputs PID_value for controlling motors 
   // put your main code here, to run repeatedly:
-  while (proximity() > x and linefollowing() == centre and time < 400) { //robot is moving forward following the line as default
-    forward();
+  while (proximity() > x and time < 400) { // while no fruit, follow line
+    line_follower(); //takes analogue values of light sensors and outputs PID_value for controlling motors 
+    motor_control(); // takes PID value and changes motor speeds to follow line 
     LED_blink_amber();
     if (proximity() < x) { //this means a fruit has tripped sensor
       //stops moving by not including forward()
@@ -38,18 +39,6 @@ void loop() {
       else {
         go_round(); //this is going to be a fat fuction to leave line and join after unripe fruit
       }
-    }
-    //below is pseudocode using output of Line_follower, PID_value. 
-    //It is probably beter to use PId_value directly to scale motors for more proportional controlthan this method below
-    if (PID_value == *left value*) { //therefore robot is to the right
-      right_motor_scale = 1.2; //example value to make right motor spin more than left, correcting course
-    }
-    if (PID_value == *right value*) {
-      left_motor_scale = 1.2;
-    }
-    if (PID_value == *centre value*) {
-      left_motor_scale = 1;
-      right_motor_scale = 1;
     }
   }
 }
