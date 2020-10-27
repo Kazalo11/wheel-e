@@ -9,7 +9,20 @@ float Kd = 15;
 float error = 0, derivative = 0, integral = 0, P = 0, I = 0, D = 0, PID_value = 0;
 float previous_error = 0;
 int flag = 0;
+int standard_speed = 100;
+
+
 //need input data from line followers
+
+
+#include <Wire.h>
+#include <Adafruit_MotorShield.h>
+#include "utility/Adafruit_MS_PWMServoDriver.h" //necessary libraries to allow the motor to run
+
+Adafruit_MotorShield AFMS = Adafruit_MotorShield(); //creates the adafruit object
+Adafruit_DCMotor *myMotor = AFMS.getMotor(1); //request the left wheel motor - should be on whatever number is inside getMotor()
+Adafruit_DCMotor *myMotor2 = AFMS.getMotor(2);
+// sets up motor
 
 
 
@@ -20,16 +33,22 @@ void setup() {
     delay(500);
     Serial.println("Started !!");
     delay(1000);
+
+    AFMS.begin();
 }
 
 void loop() { 
-    line_follower(); //set this PID_value returned
-    //multiply PID_Value by motor speed to get new motor speed
+     new_speed = line_follower() * standard_speed + standard_speed; 
+     myMotor->setSpeed(new_speed);
+     myMotor2->setSpeed(new_speed);
+     myMotor->run(FORWARD);
+     myMotor2->run(FORWARD);
+     
     
 }
 
 
-void line_follower() {
+float line_follower() {
     // reads the input on analog pin A0 (value between 0 and 1023)
     int left_light_s = analogRead(A0);
     int right_light_s = analogRead(A1);
@@ -49,9 +68,11 @@ void line_follower() {
     previous_error = error;
 
     PID_value = P + I + D;
+    //add something like if PID_value < certain value return 0 else return new value
+    return(PID_value);
 
     delay(500); //not sure about this
 
-    //return PID_value
+    
 
 }
