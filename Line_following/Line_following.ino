@@ -69,7 +69,7 @@ float line_follower() {
 
     PID_value = P + I + D;
     //add something like if PID_value < certain value return 0 else return new value
-    return(PID_value);
+    return(map(PID_value,0, max_value,0,1);
 
     delay(500); //not sure about this
 
