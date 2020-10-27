@@ -1,6 +1,6 @@
 
 
-#include <Servo.h> //libraries to control the motors + servos
+//#include <Servo.h> //libraries to control the motors + servos
 
 const int RedLED = 13; //number of RedLED
 const int BlueLED = 12; //number of BlueLED
@@ -9,8 +9,8 @@ const int LDR = A0; // number pin for ColourSensor
 int BrightnessRed[] = {};
 int BrightnessBlue[] = {}; // 2 empty arrays which will store all the LDR values from reading from colour sensor
 
-int servoPin = 9; //pin where the servo will be attach
-Servo myservo; //creates a variable of the Servo object
+//int servoPin = 9; //pin where the servo will be attach
+//Servo myservo; //creates a variable of the Servo object
 
 
 
@@ -22,7 +22,7 @@ void setup() {
   pinMode(GreenLED, OUTPUT);
   //sets the RedLED, GreenLED and BlueLED to output
 
-  myservo.attach(servoPin); //links the servo variable to the pin which will control the action
+//  myservo.attach(servoPin); //links the servo variable to the pin which will control the action
   Serial.begin(9600);
   Serial.println("Started");
 }
@@ -62,14 +62,14 @@ bool is_ripe() {
   if (averageRed < averageBlue) { //more red light returned hence bottom must be blue. UNRIPE
     StartTime = millis();
     while(millis() - StartTime <= 5500) {
-      digitalWrite(RedLED, HIGH);
+      digitalWrite(IndicatorRedLED, HIGH);
     }
     return(false);
   }
   else { //more blue light returned hence bottom must be red OR ambiguous, better to collect than leave. RIPE
     StartTime = millis();
     while(millis() - StartTime <= 5500) {
-      digitalWrite(GreenLED, HIGH);
+      digitalWrite(IndicatorGreenLED, HIGH);
     }  
   return(true);
   }
