@@ -121,9 +121,15 @@ void motor_control() {
      myMotor2->run(FORWARD);
 }
 
-
 void collect_fruit() {
-  
+    unsigned long StartTime = millis();
+  StartTime = millis();
+    while(millis() - StartTime <= 2500) {
+     myMotor->setSpeed(120);
+     myMotor2->setSpeed(120);
+     myMotor->run(FORWARD);
+     myMotor2->run(FORWARD);
+    }
 }
 
 void proximity_sensor() {
