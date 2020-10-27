@@ -25,7 +25,7 @@ void loop() {
     myMotor->setSpeed(125); //left motor is bit wonky so must run faster
     myMotor2->setSpeed(100);
     myMotor->run(FORWARD);
-    myMotor2->run(BACKWARD);
+    myMotor2->run(FORWARD);
     
     int left_light_s = analogRead(A3);
     int right_light_s = analogRead(A4);
