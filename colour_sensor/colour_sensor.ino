@@ -29,11 +29,11 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  ripe_or_unripe();
+  is_ripe();
 
 }
 
-void ripe_or_unripe() {
+bool is_ripe() {
   int i = 0;
   int interval = 3000;
   unsigned long StartTime = millis(); //inital start time so can measure interval
@@ -57,27 +57,22 @@ void ripe_or_unripe() {
   Serial.println(averageRed);
   Serial.print("Average blue brightness: ");
   Serial.println(averageBlue);
-  
-  
-  
 
-  if (averageRed < averageBlue) { //more red light returned hence bottom must be blue
-    StartTime = millis();
-    while(millis() - StartTime <= 5500) {
-      digitalWrite(GreenLED, HIGH);
-    }
-    //Servo.write(90);
-    //open door using servo motor
-    //move forward collect fruit then close door
-  }
-  else if (averageRed > averageBlue) { //more blue light returned hence bottom must be red
+
+  if (averageRed < averageBlue) { //more red light returned hence bottom must be blue. UNRIPE
     StartTime = millis();
     while(millis() - StartTime <= 5500) {
       digitalWrite(RedLED, HIGH);
     }
-    //back away, semicircle around it
-}
-
+    return(false);
+  }
+  else { //more blue light returned hence bottom must be red OR ambiguous, better to collect than leave. RIPE
+    StartTime = millis();
+    while(millis() - StartTime <= 5500) {
+      digitalWrite(GreenLED, HIGH);
+    }  
+  return(true);
+  }
 }
 
 
