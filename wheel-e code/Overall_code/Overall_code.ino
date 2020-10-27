@@ -32,9 +32,7 @@ void loop() {
       ripe_or_not(); //function to compare colour readings and returns ripe = TRUE or FALSE
       if (ripe == true) {
         green_LED_pulse(); //shows green LED for <5s
-        flap(1);
-        forward(10); //this syntax is almost certainly wonky, should move forward 10cm (collecting ripe)
-        flap(0);
+        collect_fruit(); //easier to throw it all in a function
       }
       else {
         go_round(); //this is going to be a fat fuction to leave line and join after unripe fruit
@@ -62,4 +60,9 @@ void line_follower() { //takes analogue values of light sensors and outputs PID_
     previous_error = error;
 
     PID_value = P + I + D;
+}
+
+void collect_fruit() {
+  
+}
 }

@@ -23,7 +23,9 @@ void setup() {
 }
 
 void loop() { 
-    line_follower();
+    line_follower(); //set this PID_value returned
+    //multiply PID_Value by motor speed to get new motor speed
+    
 }
 
 
@@ -49,5 +51,7 @@ void line_follower() {
     PID_value = P + I + D;
 
     delay(500); //not sure about this
+
+    //return PID_value
 
 }
