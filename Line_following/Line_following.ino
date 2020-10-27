@@ -9,8 +9,10 @@ float Kd = 15;
 float error = 0, derivative = 0, integral = 0, P = 0, I = 0, D = 0, PID_value = 0;
 float previous_error = 0;
 int flag = 0;
-int standard_speed = 100;
 
+int standard_speed = 100;
+float max_value = 500;
+float new_speed;
 
 //need input data from line followers
 
@@ -38,20 +40,14 @@ void setup() {
 }
 
 void loop() { 
-     new_speed = line_follower() * standard_speed + standard_speed; 
-     myMotor->setSpeed(new_speed);
-     myMotor2->setSpeed(new_speed);
-     myMotor->run(FORWARD);
-     myMotor2->run(FORWARD);
-     
-    
+     motor_control();
 }
 
 
 float line_follower() {
     // reads the input on analog pin A0 (value between 0 and 1023)
-    int left_light_s = analogRead(A0);
-    int right_light_s = analogRead(A1);
+    int left_light_s = analogRead(A3);
+    int right_light_s = analogRead(A4);
     error = (left_light_s - right_light_s) * 0.5; //if right light greater, robot is too far left, number is negitive and vice versa 
     P = Kp * error;
 
@@ -62,17 +58,26 @@ float line_follower() {
     D = Kd * derivative;
 
     Serial.print("left light sensor reading = ");
-    Serial.print(left_light_s);   // the raw analog reading
+    Serial.println(left_light_s);   // the raw analog reading
     Serial.print("right light sensor reading = ");
-    Serial.print(right_light_s);   // the raw analog reading
+    Serial.println(right_light_s);   // the raw analog reading
+    delay(500);
     previous_error = error;
-
+    
     PID_value = P + I + D;
     //add something like if PID_value < certain value return 0 else return new value
-    return(map(PID_value,0, max_value,0,1);
+    return(map(PID_value,0, max_value,0,1));
 
-    delay(500); //not sure about this
+
 
     
 
+}
+
+void motor_control() {
+     new_speed = line_follower() * standard_speed + standard_speed; 
+     myMotor->setSpeed(new_speed);
+     myMotor2->setSpeed(new_speed);
+     myMotor->run(FORWARD);
+     myMotor2->run(FORWARD);
 }
