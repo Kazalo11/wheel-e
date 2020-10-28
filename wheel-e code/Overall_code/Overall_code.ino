@@ -11,6 +11,7 @@ Adafruit_DCMotor *myMotor2 = AFMS.getMotor(2);
 int standard_speed = 100;
 float max_value = 500;
 float new_speed;
+float right_speed, left_speed;
 
 //PID setup
 float Kp = 25;  //K values to be caibrated
@@ -43,7 +44,6 @@ int BrightnessRed[] = {};
 int BrightnessBlue[] = {}; // 2 empty arrays which will store all the LDR values from reading from colour sensor
 
 
-
 void setup() {
   // put your setup code here, to run once:
   //this will set pins up i think
@@ -62,6 +62,7 @@ void setup() {
     delay(1000);
     AFMS.begin();
 }
+
 
 void loop() {
   // put your main code here, to run repeatedly:
@@ -84,11 +85,14 @@ void loop() {
   }
 }
 
-float line_follower() {  //takes analogue values of light sensors and outputs PID_value for controlling motors 
+
+
+
+float line_follower() {
     // reads the input on analog pin A0 (value between 0 and 1023)
-    int left_light_s = analogRead(A0);
-    int right_light_s = analogRead(A1);
-    error = (left_light_s - right_light_s) * 0.5; //if right light greater, robot is too far left, number is negitive and vice versa 
+    int left_light_s = analogRead(A3);
+    int right_light_s = analogRead(A4);
+    error = (left_light_s - (right_light_s + 300)) * 0.5; //if right light greater, robot is too far left, number is negative and vice versa ####THIS NEEDS A CONST  (currently 300) TO OFFSET SENSORS SO ERROR IS ZERO WHEN LEFT SENSOR IS LIGHT AN RIGHT IS DARK. IF THIS DOESNT WORK I WILL WRITE TURN LEFT FUNCTION.
     P = Kp * error;
 
     integral = integral + error;
@@ -98,27 +102,24 @@ float line_follower() {  //takes analogue values of light sensors and outputs PI
     D = Kd * derivative;
 
     Serial.print("left light sensor reading = ");
-    Serial.print(left_light_s);   // the raw analog reading
+    Serial.println(left_light_s);   // the raw analog reading
     Serial.print("right light sensor reading = ");
-    Serial.print(right_light_s);   // the raw analog reading
+    Serial.println(right_light_s);   // the raw analog reading
+    delay(500);
     previous_error = error;
-
+    
     PID_value = P + I + D;
     //add something like if PID_value < certain value return 0 else return new value
     return(map(PID_value,0, max_value,0,1));
-
-    delay(500); //not sure about this
-
-    
-
 }
 
 void motor_control() {
-     new_speed = line_follower() * standard_speed + standard_speed; 
-     myMotor->setSpeed(new_speed);
-     myMotor2->setSpeed(new_speed);
+     right_speed = standard_speed + line_follower() * standard_speed; //if pid negative, this should be smaller
+     left_speed = standard_speed - line_follower() * standard_speed;
+     myMotor->setSpeed(left_speed); //LEFT
+     myMotor2->setSpeed(right_speed); //RIGHT
      myMotor->run(FORWARD);
-     myMotor2->run(FORWARD);
+     myMotor2->run(FORWARD); //this may be reversed if wheels spinning in opposite direction
 }
 
 void collect_fruit() {

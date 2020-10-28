@@ -10,10 +10,11 @@ float error = 0, derivative = 0, integral = 0, P = 0, I = 0, D = 0, PID_value = 
 float previous_error = 0;
 int flag = 0;
 
+//motors
 int standard_speed = 100;
 float max_value = 500;
 float new_speed;
-
+float right_speed, left_speed;
 //need input data from line followers
 
 
@@ -22,8 +23,8 @@ float new_speed;
 #include "utility/Adafruit_MS_PWMServoDriver.h" //necessary libraries to allow the motor to run
 
 Adafruit_MotorShield AFMS = Adafruit_MotorShield(); //creates the adafruit object
-Adafruit_DCMotor *myMotor = AFMS.getMotor(1); //request the left wheel motor - should be on whatever number is inside getMotor()
-Adafruit_DCMotor *myMotor2 = AFMS.getMotor(2);
+Adafruit_DCMotor *myMotor = AFMS.getMotor(1); //request the left wheel motor - should be on whatever number is inside getMotor()  LEFT
+Adafruit_DCMotor *myMotor2 = AFMS.getMotor(2); //RIGHT
 // sets up motor
 
 
@@ -48,7 +49,7 @@ float line_follower() {
     // reads the input on analog pin A0 (value between 0 and 1023)
     int left_light_s = analogRead(A3);
     int right_light_s = analogRead(A4);
-    error = (left_light_s - right_light_s) * 0.5; //if right light greater, robot is too far left, number is negitive and vice versa 
+    error = (left_light_s - (right_light_s + 300)) * 0.5; //if right light greater, robot is too far left, number is negative and vice versa ####THIS NEEDS A CONST  (currently 300) TO OFFSET SENSORS SO ERROR IS ZERO WHEN LEFT SENSOR IS LIGHT AN RIGHT IS DARK. IF THIS DOESNT WORK I WILL WRITE TURN LEFT FUNCTION.
     P = Kp * error;
 
     integral = integral + error;
@@ -67,17 +68,13 @@ float line_follower() {
     PID_value = P + I + D;
     //add something like if PID_value < certain value return 0 else return new value
     return(map(PID_value,0, max_value,0,1));
-
-
-
-    
-
 }
 
 void motor_control() {
-     new_speed = line_follower() * standard_speed + standard_speed; 
-     myMotor->setSpeed(new_speed);
-     myMotor2->setSpeed(new_speed);
+     right_speed = standard_speed + line_follower() * standard_speed; //if pid negative, this should be smaller
+     left_speed = standard_speed - line_follower() * standard_speed;
+     myMotor->setSpeed(left_speed); //LEFT
+     myMotor2->setSpeed(right_speed); //RIGHT
      myMotor->run(FORWARD);
-     myMotor2->run(FORWARD);
+     myMotor2->run(FORWARD); //this may be reversed if wheels spinning in opposite direction
 }
