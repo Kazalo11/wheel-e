@@ -20,15 +20,14 @@ void setup() {
 
 void loop() {
   // reads the input on analog pin A0 (value between 0 and 1023)
-  unsigned long startTime = millis();
-  while (millis() - startTime <= 10000) { //will run for 10s
-    myMotor->setSpeed(125); //left motor is bit wonky so must run faster
+  
+    myMotor->setSpeed(122); //left motor is bit wonky so must run faster
     myMotor2->setSpeed(100);
     myMotor->run(FORWARD);
     myMotor2->run(FORWARD);
     
-    int left_light_s = analogRead(A3);
-    int right_light_s = analogRead(A4);
+    int left_light_s = analogRead(A2);
+    int right_light_s = analogRead(A1);
   
     Serial.print("left light sensor reading = ");
     Serial.println(left_light_s);   // the raw analog reading
@@ -46,7 +45,9 @@ void loop() {
     
   }
     
-  }
+  
+  delay(2000);
+}
   
   /*
   if (right_light_s < 10) {
@@ -67,5 +68,3 @@ void loop() {
   
 
   
-  delay(2000);
-}

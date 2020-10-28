@@ -3,12 +3,9 @@
  *in a seperate function that takes PID_Value to control motor. 
   */
 //PID setup
-float Kp = 25;
-float Ki = 0;
-float Kd = 15;
-float error = 0, derivative = 0, integral = 0, P = 0, I = 0, D = 0, PID_value = 0;
-float previous_error = 0;
-int flag = 0;
+float P;
+float Kp = 0.2;
+float error;
 
 //motors
 int standard_speed = 100;
@@ -47,32 +44,26 @@ void loop() {
 
 float line_follower() {
     // reads the input on analog pin A0 (value between 0 and 1023)
-    int left_light_s = analogRead(A3);
-    int right_light_s = analogRead(A4);
-    error = (left_light_s - (right_light_s + 300)) * 0.5; //if right light greater, robot is too far left, number is negative and vice versa ####THIS NEEDS A CONST  (currently 300) TO OFFSET SENSORS SO ERROR IS ZERO WHEN LEFT SENSOR IS LIGHT AN RIGHT IS DARK. IF THIS DOESNT WORK I WILL WRITE TURN LEFT FUNCTION.
+    int left_light_s = analogRead(A2);
+    int right_light_s = analogRead(A1);
+    error = ((left_light_s - 300) + (right_light_s - 350)) * 0.5; //if right light greater, robot is too far left, number is negative and vice versa ####THIS NEEDS A CONST  (currently 300) TO OFFSET SENSORS SO ERROR IS ZERO WHEN LEFT SENSOR IS LIGHT AN RIGHT IS DARK. IF THIS DOESNT WORK I WILL WRITE TURN LEFT FUNCTION.
     P = Kp * error;
 
-    integral = integral + error;
-    I = Ki * integral;
-
-    derivative = error - previous_error;
-    D = Kd * derivative;
 
     Serial.print("left light sensor reading = ");
     Serial.println(left_light_s);   // the raw analog reading
     Serial.print("right light sensor reading = ");
     Serial.println(right_light_s);   // the raw analog reading
+    Serial.println(P);
     delay(500);
-    previous_error = error;
     
-    PID_value = P + I + D;
     //add something like if PID_value < certain value return 0 else return new value
-    return(map(PID_value,0, max_value,0,1));
+    return(map(P,0, 325,0,1));
 }
 
 void motor_control() {
-     right_speed = standard_speed + line_follower() * standard_speed; //if pid negative, this should be smaller
-     left_speed = standard_speed - line_follower() * standard_speed;
+     right_speed = (standard_speed+10) - line_follower() * standard_speed; //if pid negative, this should be smaller
+     left_speed = standard_speed + line_follower() * standard_speed;
      myMotor->setSpeed(left_speed); //LEFT
      myMotor2->setSpeed(right_speed); //RIGHT
      myMotor->run(FORWARD);
