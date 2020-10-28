@@ -22,13 +22,11 @@ float previous_error = 0;
 int flag = 0;
 
 //proximity
-#define echoPin 2 //attach pin D2 Arduino to pin Echo of the ultrasound
-#define trigPin 3 //attach pin D3 to pin Trig of ultrasound
-
+const int trigPin = 9;
+const int echoPin = 10;
 long duration; //will store how long the sound wave takes to travel
 double distance; // will store distance measurement
-double SoundSpeed = 0.034; //speed of sound in air (can change to be more accurate)
-float x = 25, proximity = 30;
+const int x = 5; //this is the proximity threshold
 
 //"Indicator" LEDs
 const int IndicatorRedLED = 13; //number of RedLED
@@ -48,32 +46,35 @@ void setup() {
   // put your setup code here, to run once:
   //this will set pins up i think
   //INDICATOR LEDS
-    pinMode(IndicatorAmberLED, OUTPUT);
-    pinMode(IndicatorGreenLED, OUTPUT);
-    pinMode(IndicatorRedLED, OUTPUT);
+  pinMode(IndicatorAmberLED, OUTPUT);
+  pinMode(IndicatorGreenLED, OUTPUT);
+  pinMode(IndicatorRedLED, OUTPUT);
   //colour sensor LEDs 
-    pinMode(RedLED, OUTPUT);
-    pinMode(BlueLED, OUTPUT);
-    pinMode(GreenLED, OUTPUT);
+  pinMode(RedLED, OUTPUT);
+  pinMode(BlueLED, OUTPUT);
+  pinMode(GreenLED, OUTPUT);
   //this is line follower setup (for testing)
-    Serial.begin(9600);                     //setting serial monitor at a default baund rate of 9600
-    delay(500);
-    Serial.println("Started !!");
-    delay(1000);
-    AFMS.begin();
+  Serial.begin(9600);                     //setting serial monitor at a default baund rate of 9600
+  delay(500);
+  Serial.println("Started !!");
+  delay(1000);
+  AFMS.begin();
+  //Proximity setup
+  pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
+  pinMode(echoPin, INPUT); // Sets the echoPin as an Input
+  Serial.begin(9600); // Starts the serial communication
 }
 
 
 void loop() {
   // put your main code here, to run repeatedly:
   proximity_sensor();
-  while (proximity > x) { // while no fruit, follow line
+  while (proximity_sensor() > x) { // while no fruit, follow line
     proximity_sensor();
     motor_control(); // takes line follower PID value and changes motor speeds to follow line 
     LED_blink_amber(); 
   }
-  //if (proximity < x)  //this means a fruit has tripped sensor
-  //stops moving by not including forward()
+  //if (proximity_sensor() < x), this means a fruit has tripped sensor so stops moving by not including forward()
   LED_const_amber();
   is_ripe(); //function to blink the red test LED and take colour reading, ditto for blue, compare colour readings and return ripe = TRUE or FALSE. also lights indicator leds
   if (is_ripe() == true) {
@@ -132,8 +133,21 @@ void collect_fruit() {
     }
 }
 
-void proximity_sensor() {
-  proximity = 40;
+float proximity_sensor() {
+  // Clears the trigPin
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  // Sets the trigPin on HIGH state for 10 micro seconds
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  // Reads the echoPin, returns the sound wave travel time in microseconds
+  duration = pulseIn(echoPin, HIGH);
+  // Calculating the distance
+  distance= duration*0.034/2;
+  //Serial.print("Distance: "); // Prints the distance on the Serial Monitor
+  //Serial.println(distance);
+  return distance;
 }
 
 void LED_blink_amber(){
