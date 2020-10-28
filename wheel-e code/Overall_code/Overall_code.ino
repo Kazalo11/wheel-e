@@ -67,21 +67,20 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   proximity_sensor();
-  while (proximity > x and time < 400) { // while no fruit, follow line
+  while (proximity > x) { // while no fruit, follow line
     proximity_sensor();
     motor_control(); // takes line follower PID value and changes motor speeds to follow line 
-    LED_blink_amber();
-    if (proximity < x) { //this means a fruit has tripped sensor
-      //stops moving by not including forward()
-      LED_const_amber();
-      is_ripe(); //function to blink the red test LED and take colour reading, ditto for blue, compare colour readings and return ripe = TRUE or FALSE. also lights indicator leds
-      if (is_ripe() == true) {
-        collect_fruit(); //easier to throw it all in a function
-      }
-      else {
-        go_round(); //this is going to be a fat fuction to leave line and join after unripe fruit
-      }
-    }
+    LED_blink_amber(); 
+  }
+  //if (proximity < x)  //this means a fruit has tripped sensor
+  //stops moving by not including forward()
+  LED_const_amber();
+  is_ripe(); //function to blink the red test LED and take colour reading, ditto for blue, compare colour readings and return ripe = TRUE or FALSE. also lights indicator leds
+  if (is_ripe() == true) {
+    collect_fruit(); //easier to throw it all in a function
+  }
+  else {
+    go_round(); //this is going to be a fat fuction to leave line and join after unripe fruit
   }
 }
 
