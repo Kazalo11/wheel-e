@@ -31,7 +31,11 @@ float proximity_sensor() {
   duration = pulseIn(echoPin, HIGH);
   // Calculating the distance
   distance= duration*0.034/2;
-  //Serial.print("Distance: "); // Prints the distance on the Serial Monitor
-  //Serial.println(distance);
+  Serial.print("Distance: "); // Prints the distance on the Serial Monitor
+  Serial.println(distance);
+  
+  if (distance < 4.5) {
+    Serial.print("STOP!");
+  }
   return distance;
 }

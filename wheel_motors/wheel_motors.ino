@@ -20,10 +20,10 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
 
-  myMotor->setSpeed(120); //sets the speed in 
+  myMotor->setSpeed(122); //sets the speed in 
   myMotor ->run(FORWARD); //activates the motor to move forwards;
 
-  myMotor2->setSpeed(120); //sets the speed in 
+  myMotor2->setSpeed(100); //sets the speed in 
   myMotor2 ->run(FORWARD); //activates the motor to move forwards;
 
   Serial.println("Hello");

@@ -5,21 +5,25 @@
 
 //motors
 Adafruit_MotorShield AFMS = Adafruit_MotorShield(); //creates the adafruit object
-Adafruit_DCMotor *myMotor = AFMS.getMotor(1); //request the left wheel motor - should be on whatever number is inside getMotor()
-Adafruit_DCMotor *myMotor2 = AFMS.getMotor(2);
+Adafruit_DCMotor *myMotorLeft = AFMS.getMotor(1); //request the left wheel motor - should be on whatever number is inside getMotor()
+Adafruit_DCMotor *myMotorRight = AFMS.getMotor(2);
+float leftSteer = 1.0;
+float rightSteer = 1.0;
+float threshold_right = 70;
+float threshold_left = 80; //vary these 2 parameters depending on lighting
 
-int standard_speed = 100;
+/*int standard_speed = 100;
 float max_value = 500;
 float new_speed;
-float right_speed, left_speed;
+float right_speed, left_speed; */
 
-//PID setup
+/*//PID setup 
 float Kp = 25;  //K values to be caibrated
 float Ki = 0;
 float Kd = 15;
 float error = 0, derivative = 0, integral = 0, P = 0, I = 0, D = 0, PID_value = 0;
 float previous_error = 0;
-int flag = 0;
+int flag = 0; */
 
 //proximity
 const int trigPin = 9;
@@ -41,6 +45,9 @@ const int LDR = A0; // number pin for ColourSensor
 int BrightnessRed[] = {};
 int BrightnessBlue[] = {}; // 2 empty arrays which will store all the LDR values from reading from colour sensor
 
+//goround setup
+float leftscale = 1.5;
+float rightscale = 1; //adjust these
 
 void setup() {
   // put your setup code here, to run once:
@@ -71,7 +78,8 @@ void loop() {
   proximity_sensor();
   while (proximity_sensor() > x) { // while no fruit, follow line
     proximity_sensor();
-    motor_control(); // takes line follower PID value and changes motor speeds to follow line 
+    line_follower();
+    //motor_control(); // takes line follower PID value and changes motor speeds to follow line 
     LED_blink_amber(); 
   }
   //if (proximity_sensor() < x), this means a fruit has tripped sensor so stops moving by not including forward()
@@ -86,50 +94,46 @@ void loop() {
 }
 
 
-
-
-float line_follower() {
-    // reads the input on analog pin A0 (value between 0 and 1023)
-    int left_light_s = analogRead(A3);
-    int right_light_s = analogRead(A4);
-    error = (left_light_s - (right_light_s + 300)) * 0.5; //if right light greater, robot is too far left, number is negative and vice versa ####THIS NEEDS A CONST  (currently 300) TO OFFSET SENSORS SO ERROR IS ZERO WHEN LEFT SENSOR IS LIGHT AN RIGHT IS DARK. IF THIS DOESNT WORK I WILL WRITE TURN LEFT FUNCTION.
-    P = Kp * error;
-
-    integral = integral + error;
-    I = Ki * integral;
-
-    derivative = error - previous_error;
-    D = Kd * derivative;
-
-    Serial.print("left light sensor reading = ");
-    Serial.println(left_light_s);   // the raw analog reading
-    Serial.print("right light sensor reading = ");
-    Serial.println(right_light_s);   // the raw analog reading
-    delay(500);
-    previous_error = error;
-    
-    PID_value = P + I + D;
-    //add something like if PID_value < certain value return 0 else return new value
-    return(map(PID_value,0, max_value,0,1));
-}
-
-void motor_control() {
-     right_speed = standard_speed + line_follower() * standard_speed; //if pid negative, this should be smaller
-     left_speed = standard_speed - line_follower() * standard_speed;
-     myMotor->setSpeed(left_speed); //LEFT
-     myMotor2->setSpeed(right_speed); //RIGHT
-     myMotor->run(FORWARD);
-     myMotor2->run(FORWARD); //this may be reversed if wheels spinning in opposite direction
+void line_follower() {
+  myMotorLeft->setSpeed(106*leftSteer);
+  myMotorRight->setSpeed(100*rightSteer);
+  myMotorLeft->run(FORWARD);
+  myMotorRight->run(FORWARD);
+  
+  int left_light_s = analogRead(A1);
+  int right_light_s = analogRead(A0);
+  
+  /*Serial.print("Left Light reading: ");
+  Serial.println(left_light_s);
+  Serial.print("Right Light reading: ");
+  Serial.println(right_light_s); */
+  
+  if (left_light_s < threshold_left) { //if left is below threshold then must have gone off the line, vary right
+    Serial.println("Steer Right");
+    leftSteer = 1.5; //vary these speeds however is best
+    rightSteer = 0.64;
+  }
+  else if (right_light_s > threshold_right && left_light_s > threshold_right) { // use this for the junction thing
+    unsigned long StartTime = millis(); //initalise timer
+    while (millis() - StartTime <= 3000) { //vary this time depending on how the motor turns
+      myMotorLeft->run(RELEASE); //should perform a stationary left term so the robot is turned left and the left sensor is still on the white line
+      
+    }
+  }
+  else{
+    leftSteer = 1.0;
+    rightSteer = 1.0;
+  }
 }
 
 void collect_fruit() {
     unsigned long StartTime = millis();
   StartTime = millis();
     while(millis() - StartTime <= 2500) {
-     myMotor->setSpeed(120);
-     myMotor2->setSpeed(120);
-     myMotor->run(FORWARD);
-     myMotor2->run(FORWARD);
+     myMotorLeft->setSpeed(120);
+     myMotorRight->setSpeed(120);
+     myMotorLeft->run(FORWARD);
+     myMotorRight->run(FORWARD);
     }
 }
 
@@ -147,6 +151,9 @@ float proximity_sensor() {
   distance= duration*0.034/2;
   //Serial.print("Distance: "); // Prints the distance on the Serial Monitor
   //Serial.println(distance);
+  if (distance < 4.5) {
+    Serial.print("STOP!");
+  }
   return distance;
 }
 
@@ -211,8 +218,40 @@ float average(int * array) { //finds the average of an array of numbers
   return(float(sum/len));
 }
 
-void go_round(){
+void go_round() {
   
+  left_turn();
+  
+  //RIGHT ARC
+  bool off_line = true; //so while loop starts
+  unsigned long StartTime = millis();
+  while (millis() - StartTime <= 1000 /*or off_line = true*/) { // will start arc NOT looking at sensor (as it moves off line) then after a time will continue arc till reaches line again
+    int left_light_s = analogRead(A1);
+    int right_light_s = analogRead(A0);
+   
+    myMotorLeft->setSpeed(106*leftscale); //right turn arc around fruit (hopefully), adjust scales to arc around tighter/looser
+    myMotorRight->setSpeed(100*rightscale);
+    myMotorLeft->run(FORWARD);
+    myMotorRight->run(FORWARD);
+  
+    if (left_light_s >200 and right_light_s >200) { //adjust for actual values
+      off_line = false;
+    }
+  }
+  //leaves while loop when line found again, so needs to turn left again (this might be unneeded if line follower good enough)
+  left_turn();
+
+  
+}
+
+void left_turn(){ // for goround, if line follower problems then will need for line follow too
+  unsigned long StartTime = millis();
+  while (millis() - StartTime <= 3000) { //adjust to end at left turn
+  myMotorLeft->setSpeed(106); //taken from line follower new for straight forwards, reversed one to spin on a point
+  myMotorRight->setSpeed(100);
+  myMotorLeft->run(BACKWARD);
+  myMotorRight->run(FORWARD);
+  }
 }
 
 /* OLD CODE, KEPT IN CASE STUFF GOES WRONG
@@ -247,6 +286,40 @@ void green_LED_pulse(){
   digitalWrite(IndicatorGreenLED, HIGH);
   delay(5500);
   digitalWrite(IndicatorGreenLED, LOW);
+}
+
+float line_follower() {
+    // reads the input on analog pin A0 (value between 0 and 1023)
+    int left_light_s = analogRead(A3);
+    int right_light_s = analogRead(A4);
+    error = (left_light_s - (right_light_s + 300)) * 0.5; //if right light greater, robot is too far left, number is negative and vice versa ####THIS NEEDS A CONST  (currently 300) TO OFFSET SENSORS SO ERROR IS ZERO WHEN LEFT SENSOR IS LIGHT AN RIGHT IS DARK. IF THIS DOESNT WORK I WILL WRITE TURN LEFT FUNCTION.
+    P = Kp * error;
+
+    integral = integral + error;
+    I = Ki * integral;
+
+    derivative = error - previous_error;
+    D = Kd * derivative;
+
+    Serial.print("left light sensor reading = ");
+    Serial.println(left_light_s);   // the raw analog reading
+    Serial.print("right light sensor reading = ");
+    Serial.println(right_light_s);   // the raw analog reading
+    delay(500);
+    previous_error = error;
+    
+    PID_value = P + I + D;
+    //add something like if PID_value < certain value return 0 else return new value
+    return(map(PID_value,0, max_value,0,1));
+}
+
+void motor_control() {
+     right_speed = standard_speed + line_follower() * standard_speed; //if pid negative, this should be smaller
+     left_speed = standard_speed - line_follower() * standard_speed;
+     myMotor->setSpeed(left_speed); //LEFT
+     myMotor2->setSpeed(right_speed); //RIGHT
+     myMotor->run(FORWARD);
+     myMotor2->run(FORWARD); //this may be reversed if wheels spinning in opposite direction
 }
 
 */
