@@ -45,6 +45,9 @@ const int LDR = A0; // number pin for ColourSensor
 int BrightnessRed[] = {};
 int BrightnessBlue[] = {}; // 2 empty arrays which will store all the LDR values from reading from colour sensor
 
+//goround setup
+float leftscale = 1.5;
+float rightscale = 1; //adjust these
 
 void setup() {
   // put your setup code here, to run once:
@@ -215,8 +218,40 @@ float average(int * array) { //finds the average of an array of numbers
   return(float(sum/len));
 }
 
-void go_round(){
+void go_round() {
   
+  left_turn();
+  
+  //RIGHT ARC
+  bool off_line = true; //so while loop starts
+  unsigned long StartTime = millis();
+  while (millis() - StartTime <= 1000 /*or off_line = true*/) { // will start arc NOT looking at sensor (as it moves off line) then after a time will continue arc till reaches line again
+    int left_light_s = analogRead(A1);
+    int right_light_s = analogRead(A0);
+   
+    myMotorLeft->setSpeed(106*leftscale); //right turn arc around fruit (hopefully), adjust scales to arc around tighter/looser
+    myMotorRight->setSpeed(100*rightscale);
+    myMotorLeft->run(FORWARD);
+    myMotorRight->run(FORWARD);
+  
+    if (left_light_s >200 and right_light_s >200) { //adjust for actual values
+      off_line = false;
+    }
+  }
+  //leaves while loop when line found again, so needs to turn left again (this might be unneeded if line follower good enough)
+  left_turn();
+
+  
+}
+
+void left_turn(){ // for goround, if line follower problems then will need for line follow too
+  unsigned long StartTime = millis();
+  while (millis() - StartTime <= 3000) { //adjust to end at left turn
+  myMotorLeft->setSpeed(106); //taken from line follower new for straight forwards, reversed one to spin on a point
+  myMotorRight->setSpeed(100);
+  myMotorLeft->run(BACKWARD);
+  myMotorRight->run(FORWARD);
+  }
 }
 
 /* OLD CODE, KEPT IN CASE STUFF GOES WRONG
