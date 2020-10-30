@@ -29,23 +29,23 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   
-  myMotorLeft->setSpeed(106*leftSteer);
-  myMotorRight->setSpeed(100*rightSteer);
-  myMotorLeft->run(FORWARD);
-  myMotorRight->run(FORWARD);
   line_follower();
 
 }
 
 void line_follower() {
+  myMotorLeft->setSpeed(106*leftSteer);
+  myMotorRight->setSpeed(100*rightSteer);
+  myMotorLeft->run(FORWARD);
+  myMotorRight->run(FORWARD);
+  
   int left_light_s = analogRead(A1);
   int right_light_s = analogRead(A0);
-  Serial.print("Left Light reading: ");
+  
+  /*Serial.print("Left Light reading: ");
   Serial.println(left_light_s);
   Serial.print("Right Light reading: ");
-  Serial.println(right_light_s);
-  
-  
+  Serial.println(right_light_s); */
   
   if (left_light_s < threshold_left) { //if left is below threshold then must have gone off the line, vary right
     Serial.println("Steer Right");
