@@ -2,7 +2,7 @@ float leftSteer = 1.0;
 float rightSteer = 1.0;
 float threshold_right = 70;
 float threshold_left = 80; //vary these 2 parameters depending on lighting
-
+unsigned long EndTime = 0;
 
 
 #include <Wire.h>
@@ -15,8 +15,8 @@ Adafruit_DCMotor *myMotorRight = AFMS.getMotor(2);
 
 // sets up motor
 
-const byte DistTrigger = 8;
-const byte DistEcho = 9;
+const byte trigPin = 2;
+const byte echoPin = 4;
 
 unsigned long time;
 
@@ -37,14 +37,23 @@ void setup() {
 
 
 float readDistanceSensor() {
-   digitalWrite(DistTrigger, LOW);
-   delayMicroseconds(2);
-   digitalWrite(DistTrigger, HIGH);
-   delayMicroseconds(10);
-   digitalWrite(DistTrigger, LOW);
-   float duration = pulseIn(DistEcho, HIGH);  // in microseconds
-   float distance = duration * 0.0343 / 2.0;  // in centimeters
-   return distance;
+  digitalWrite(trigPin, LOW);
+  unsigned long StartTime = millis();
+// Sets the trigPin on HIGH state for 10 micro seconds
+  if (StartTime - EndTime >=  2000) {
+    digitalWrite(trigPin, HIGH);
+}
+  if (StartTime - EndTime >=12000) {
+    digitalWrite(trigPin, LOW);
+}
+// Reads the echoPin, returns the sound wave travel time in microseconds
+  duration = pulseIn(echoPin, HIGH);
+// Calculating the distance
+  distance= duration*0.034/2 + 1;
+// Prints the distance on the Serial Monitor
+  Serial.print("Distance: ");
+  Serial.println(distance);
+  delay(2000);
 }
 
 
@@ -90,12 +99,12 @@ void loop() {
   */
   else{
       leftSteer = 1.0;
-  rightSteer = 1.0;
+      rightSteer = 1.0;
   }
 
   float distance = readDistanceSensor();
   
-  if ((distance<11.5)){
+  if ((distance<4.5)){
     leftSteer = 0.0;
     rightSteer = 0.0; 
     Serial.println(distance);
