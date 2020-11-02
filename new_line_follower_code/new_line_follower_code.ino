@@ -28,14 +28,14 @@ void setup() {
   Serial.begin(9600);
   Serial.println("Started");
 
-  pinMode(DistTrigger, OUTPUT);
-  pinMode(DistEcho, INPUT);
+//  pinMode(DistTrigger, OUTPUT);
+ // pinMode(DistEcho, INPUT);
 
   AFMS.begin();
 
 }
 
-
+/* NOT NEEDED, PROXIMITY IS IN DIFFERENT FUNCTION
 float readDistanceSensor() {
   digitalWrite(trigPin, LOW);
   unsigned long StartTime = millis();
@@ -54,10 +54,12 @@ float readDistanceSensor() {
   Serial.print("Distance: ");
   Serial.println(distance);
   delay(2000);
+} */
+void loop(){
+  line_follower();
 }
 
-
-void loop() {
+void line_follower() {
   myMotorLeft->setSpeed(150*leftSteer);
   myMotorRight->setSpeed(150*rightSteer);
   myMotorLeft->run(BACKWARD);
@@ -101,14 +103,16 @@ void loop() {
       leftSteer = 1.0;
       rightSteer = 1.0;
   }
-
+/*
   float distance = readDistanceSensor();
   
-  if ((distance<4.5)){
+  * THIS IS NOT NEEDED, FUNCTION IN WHILE LOOP IN MAIN CODE
+    if ((distance<4.5)){
     leftSteer = 0.0;
     rightSteer = 0.0; 
     Serial.println(distance);
-  }
+    } */ 
+  
   
 
 }

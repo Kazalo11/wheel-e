@@ -31,6 +31,7 @@ const int echoPin = 10;
 long duration; //will store how long the sound wave takes to travel
 double distance; // will store distance measurement
 const int x = 5; //this is the proximity threshold
+unsigned long EndTime = 0;
 
 //"Indicator" LEDs
 const int IndicatorRedLED = 13; //number of RedLED
@@ -93,7 +94,52 @@ void loop() {
   }
 }
 
+void line_follower() {
+  myMotorLeft->setSpeed(150*leftSteer);
+  myMotorRight->setSpeed(150*rightSteer);
+  myMotorLeft->run(BACKWARD);
+  myMotorRight->run(BACKWARD);
 
+
+  
+  int left_light_s = analogRead(A1);
+  int right_light_s = analogRead(A0);
+  
+  Serial.print("Left Light reading: ");
+  Serial.println(left_light_s);
+  Serial.print("Right Light reading: ");
+  Serial.println(right_light_s); 
+  delay(200);
+  
+  
+  if ((left_light_s < threshold_left)) { //if left is below threshold then must have gone off the line, vary right
+    Serial.println("Steer Right");
+    leftSteer = 1.5; //vary these speeds however is best
+    rightSteer = 0.64;
+  }
+
+  else if ((right_light_s < threshold_right)) { //if left is below threshold then must have gone off the line, vary LEFT
+    Serial.println("Steer LEFT");
+    leftSteer = 0.64; //vary these speeds however is best
+    rightSteer = 1.5;
+  }
+  /*
+  else if (right_light_s > threshold_right && left_light_s > threshold_right) { // use this for the junction thing
+    onJunction = true;
+    
+    if (
+    while (millis() - StartTime <= 3000) { //vary this time depending on how the motor turns
+      //myMotorLeft->run(RELEASE); //should perform a stationary left term so the robot is turned left and the left sensor is still on the white line
+      
+    }
+  }
+  */
+  else{
+      leftSteer = 1.0;
+      rightSteer = 1.0;
+  }
+
+/*
 void line_follower() {
   myMotorLeft->setSpeed(106*leftSteer);
   myMotorRight->setSpeed(100*rightSteer);
@@ -101,12 +147,7 @@ void line_follower() {
   myMotorRight->run(FORWARD);
   
   int left_light_s = analogRead(A1);
-  int right_light_s = analogRead(A0);
-  
-  /*Serial.print("Left Light reading: ");
-  Serial.println(left_light_s);
-  Serial.print("Right Light reading: ");
-  Serial.println(right_light_s); */
+  int right_light_s = analogRead(A0); 
   
   if (left_light_s < threshold_left) { //if left is below threshold then must have gone off the line, vary right
     Serial.println("Steer Right");
@@ -123,8 +164,8 @@ void line_follower() {
   else{
     leftSteer = 1.0;
     rightSteer = 1.0;
-  }
-}
+  } */
+} 
 
 void collect_fruit() {
     unsigned long StartTime = millis();
@@ -138,22 +179,23 @@ void collect_fruit() {
 }
 
 float proximity_sensor() {
-  // Clears the trigPin
   digitalWrite(trigPin, LOW);
-  delayMicroseconds(2);
-  // Sets the trigPin on HIGH state for 10 micro seconds
-  digitalWrite(trigPin, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigPin, LOW);
-  // Reads the echoPin, returns the sound wave travel time in microseconds
+  unsigned long StartTime = millis();
+// Sets the trigPin on HIGH state for 10 micro seconds
+  if (StartTime - EndTime >=  2000) {
+    digitalWrite(trigPin, HIGH);
+}
+  if (StartTime - EndTime >=12000) {
+    digitalWrite(trigPin, LOW);
+}
+// Reads the echoPin, returns the sound wave travel time in microseconds
   duration = pulseIn(echoPin, HIGH);
-  // Calculating the distance
-  distance= duration*0.034/2;
-  //Serial.print("Distance: "); // Prints the distance on the Serial Monitor
-  //Serial.println(distance);
-  if (distance < 4.5) {
-    Serial.print("STOP!");
-  }
+// Calculating the distance
+  distance= duration*0.034/2 + 1;
+// Prints the distance on the Serial Monitor
+  Serial.print("Distance: ");
+  Serial.println(distance);
+  delay(2000);
   return distance;
 }
 
