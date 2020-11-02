@@ -10,8 +10,10 @@ Adafruit_DCMotor *myMotorLeft = AFMS.getMotor(1); //request the left wheel motor
 Adafruit_DCMotor *myMotorRight = AFMS.getMotor(2);
 float leftSteer = 1.0;
 float rightSteer = 1.0;
-float threshold_right = 70;
-float threshold_left = 80; //vary these 2 parameters depending on lighting
+float threshold_right = 100;
+float threshold_left = 90; //vary these 2 parameters depending on lighting
+float threshold_junction = 70; 
+bool onJunction = false;
 
 int servoPin = 5; //pin where the servo will be attach
 Servo myservo; //creates a variable of the Servo object
@@ -134,7 +136,14 @@ void line_follower() {
     leftSteer = 0.64; //vary these speeds however is best
     rightSteer = 1.5;
   }
-  
+  else if (right_light_s < threshold_junction && left_light_s < threshold_junction) { // use this for the junction thing
+    onJunction = true;
+    unsigned long StartTime = millis();
+    while (StartTime - EndTime <= 3000) {
+      myMotorLeft->run(RELEASE);
+    }
+    EndTime = StartTime;
+  }
   else{
       leftSteer = 1.0;
       rightSteer = 1.0;

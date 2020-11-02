@@ -1,7 +1,8 @@
 float leftSteer = 1.0;
 float rightSteer = 1.0;
-float threshold_right = 70;
-float threshold_left = 80; //vary these 2 parameters depending on lighting
+float threshold_right = 100;
+float threshold_left = 90; //vary these 2 parameters depending on lighting
+float threshold_junction = 70; //threshold for making a turn at the junction
 unsigned long EndTime = 0;
 
 
@@ -83,20 +84,19 @@ void line_follower() {
     rightSteer = 0.64;
   }
 
-  else if ((right_light_s < threshold_right)) { //if left is below threshold then must have gone off the line, vary right
+  else if ((right_light_s > threshold_right)) { //if left is below threshold then must have gone off the line, vary right
     Serial.println("Steer Right");
     leftSteer = 0.64; //vary these speeds however is best
     rightSteer = 1.5;
   }
-  /*
-  else if (right_light_s > threshold_right && left_light_s > threshold_right) { // use this for the junction thing
+  
+  else if (right_light_s < threshold_junction && left_light_s < threshold_junction) { // use this for the junction thing
     onJunction = true;
-    
-    if (
-    while (millis() - StartTime <= 3000) { //vary this time depending on how the motor turns
-      //myMotorLeft->run(RELEASE); //should perform a stationary left term so the robot is turned left and the left sensor is still on the white line
-      
+    unsigned long StartTime = millis();
+    while (StartTime - EndTime <= 3000) {
+      myMotorLeft->run(RELEASE);
     }
+    EndTime = StartTime;
   }
   */
   else{
