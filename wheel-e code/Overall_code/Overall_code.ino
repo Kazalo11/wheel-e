@@ -2,6 +2,7 @@
 #include <Wire.h>
 #include <Adafruit_MotorShield.h>
 #include "utility/Adafruit_MS_PWMServoDriver.h" //necessary libraries to allow the motor to run
+#include <Servo.h>
 
 //motors
 Adafruit_MotorShield AFMS = Adafruit_MotorShield(); //creates the adafruit object
@@ -11,6 +12,9 @@ float leftSteer = 1.0;
 float rightSteer = 1.0;
 float threshold_right = 70;
 float threshold_left = 80; //vary these 2 parameters depending on lighting
+
+int servoPin = 5; //pin where the servo will be attach
+Servo myservo; //creates a variable of the Servo object
 
 /*int standard_speed = 100;
 float max_value = 500;
@@ -52,7 +56,6 @@ float rightscale = 1; //adjust these
 
 void setup() {
   // put your setup code here, to run once:
-  //this will set pins up i think
   //INDICATOR LEDS
   pinMode(IndicatorAmberLED, OUTPUT);
   pinMode(IndicatorGreenLED, OUTPUT);
@@ -71,6 +74,9 @@ void setup() {
   pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
   pinMode(echoPin, INPUT); // Sets the echoPin as an Input
   Serial.begin(9600); // Starts the serial communication
+  //servo door shut at start
+  myservo.attach(servoPin); //links the servo variable to the pin which will control the action
+  myservo.write(180); //should be door shut (might need changing)
 }
 
 
@@ -92,6 +98,11 @@ void loop() {
   else {
     go_round(); //this is going to be a fat fuction to leave line and join after unripe fruit
   }
+  if(millis() > 9999999999) { //end of line condition need discussion, this is a dummy
+  reverse_at_end();
+  exit(0); //this stops the loop function (hopefully back at start line with full points woooo)
+  }
+  
 }
 
 void line_follower() {
@@ -123,52 +134,16 @@ void line_follower() {
     leftSteer = 0.64; //vary these speeds however is best
     rightSteer = 1.5;
   }
-  /*
-  else if (right_light_s > threshold_right && left_light_s > threshold_right) { // use this for the junction thing
-    onJunction = true;
-    
-    if (
-    while (millis() - StartTime <= 3000) { //vary this time depending on how the motor turns
-      //myMotorLeft->run(RELEASE); //should perform a stationary left term so the robot is turned left and the left sensor is still on the white line
-      
-    }
-  }
-  */
+  
   else{
       leftSteer = 1.0;
       rightSteer = 1.0;
   }
-
-/*
-void line_follower() {
-  myMotorLeft->setSpeed(106*leftSteer);
-  myMotorRight->setSpeed(100*rightSteer);
-  myMotorLeft->run(FORWARD);
-  myMotorRight->run(FORWARD);
-  
-  int left_light_s = analogRead(A1);
-  int right_light_s = analogRead(A0); 
-  
-  if (left_light_s < threshold_left) { //if left is below threshold then must have gone off the line, vary right
-    Serial.println("Steer Right");
-    leftSteer = 1.5; //vary these speeds however is best
-    rightSteer = 0.64;
-  }
-  else if (right_light_s > threshold_right && left_light_s > threshold_right) { // use this for the junction thing
-    unsigned long StartTime = millis(); //initalise timer
-    while (millis() - StartTime <= 3000) { //vary this time depending on how the motor turns
-      myMotorLeft->run(RELEASE); //should perform a stationary left term so the robot is turned left and the left sensor is still on the white line
-      
-    }
-  }
-  else{
-    leftSteer = 1.0;
-    rightSteer = 1.0;
-  } */
 } 
 
 void collect_fruit() {
-    unsigned long StartTime = millis();
+  myservo.write(90); //open door
+  unsigned long StartTime = millis();
   StartTime = millis();
     while(millis() - StartTime <= 2500) {
      myMotorLeft->setSpeed(120);
@@ -176,16 +151,17 @@ void collect_fruit() {
      myMotorLeft->run(FORWARD);
      myMotorRight->run(FORWARD);
     }
+  myservo.write(180); //shut door
 }
 
 float proximity_sensor() {
   digitalWrite(trigPin, LOW);
   unsigned long StartTime = millis();
 // Sets the trigPin on HIGH state for 10 micro seconds
-  if (StartTime - EndTime >=  2000) {
+  if (StartTime - EndTime >=  2000) { //should this be while???
     digitalWrite(trigPin, HIGH);
 }
-  if (StartTime - EndTime >=12000) {
+  if (StartTime - EndTime >=12000) { //ditto
     digitalWrite(trigPin, LOW);
 }
 // Reads the echoPin, returns the sound wave travel time in microseconds
@@ -296,7 +272,62 @@ void left_turn(){ // for goround, if line follower problems then will need for l
   }
 }
 
+void reverse_at_end(){ //first, straight reverse with door open to remove fruit
+  myservo.write(90); //open door
+  
+  unsigned long StartTime = millis();
+  while (millis() - StartTime <= 1000){ // straight reverse
+  myMotorLeft->setSpeed(150);
+  myMotorRight->setSpeed(150);
+  myMotorLeft->run(BACKWARD);
+  myMotorRight->run(BACKWARD);
+  }
+  StartTime = millis();
+  while (millis() - StartTime <= 2000){ //rotate to face finish line, value will need to be changed
+  myMotorLeft->setSpeed(90);
+  myMotorRight->setSpeed(90);
+  myMotorLeft->run(FORWARD);
+  myMotorRight->run(BACKWARD);
+  }
+
+  while (millis() - StartTime <= 10000){ // straight FORWARDS TO START LINE (value needs to be changed
+  myMotorLeft->setSpeed(150);
+  myMotorRight->setSpeed(150);
+  myMotorLeft->run(FORWARD);
+  myMotorRight->run(FORWARD);
+  }
+  
+}
+
 /* OLD CODE, KEPT IN CASE STUFF GOES WRONG
+
+void line_follower() {
+  myMotorLeft->setSpeed(106*leftSteer);
+  myMotorRight->setSpeed(100*rightSteer);
+  myMotorLeft->run(FORWARD);
+  myMotorRight->run(FORWARD);
+  
+  int left_light_s = analogRead(A1);
+  int right_light_s = analogRead(A0); 
+  
+  if (left_light_s < threshold_left) { //if left is below threshold then must have gone off the line, vary right
+    Serial.println("Steer Right");
+    leftSteer = 1.5; //vary these speeds however is best
+    rightSteer = 0.64;
+  }
+  else if (right_light_s > threshold_right && left_light_s > threshold_right) { // use this for the junction thing
+    unsigned long StartTime = millis(); //initalise timer
+    while (millis() - StartTime <= 3000) { //vary this time depending on how the motor turns
+      myMotorLeft->run(RELEASE); //should perform a stationary left term so the robot is turned left and the left sensor is still on the white line
+      
+    }
+  }
+  else{
+    leftSteer = 1.0;
+    rightSteer = 1.0;
+  } 
+
+
 void line_follower() { //takes analogue values of light sensors and outputs PID_value for controlling motors 
     // reads the input on analog pin A0 (value between 0 and 1023)
     int left_light_s = analogRead(A0);
