@@ -15,34 +15,21 @@ float threshold_left = 90; //vary these 2 parameters depending on lighting
 float threshold_junction = 70; 
 bool onJunction = false;
 
-int servoPin = 5; //pin where the servo will be attach
-Servo myservo; //creates a variable of the Servo object
-
-/*int standard_speed = 100;
-float max_value = 500;
-float new_speed;
-float right_speed, left_speed; */
-
-/*//PID setup 
-float Kp = 25;  //K values to be caibrated
-float Ki = 0;
-float Kd = 15;
-float error = 0, derivative = 0, integral = 0, P = 0, I = 0, D = 0, PID_value = 0;
-float previous_error = 0;
-int flag = 0; */
 
 //proximity
 const int trigPin = 9;
-const int echoPin = 10;
+const int echoPin = 8;
 long duration; //will store how long the sound wave takes to travel
 double distance; // will store distance measurement
-const int x = 5; //this is the proximity threshold
+const int x = 7; //this is the proximity threshold
 unsigned long EndTime = 0;
-
+unsigned long previousMillis = 0; 
+int ledState = LOW;
+int displacement;
 //"Indicator" LEDs
-const int IndicatorRedLED = 13; //number of RedLED
-const int IndicatorAmberLED = 10; //these numbers need to be edited
-const int IndicatorGreenLED = 11; //number of GreenLED
+const int IndicatorRedLED = 0; //number of RedLED
+const int IndicatorAmberLED = 1; //these numbers need to be edited
+const int IndicatorGreenLED = 2; //number of GreenLED
 
 //colour sensor
 const int RedLED = 13; //number of RedLED
@@ -56,62 +43,13 @@ int BrightnessBlue[] = {}; // 2 empty arrays which will store all the LDR values
 float leftscale = 1.5;
 float rightscale = 1; //adjust these
 
-void setup() {
-  // put your setup code here, to run once:
-  //INDICATOR LEDS
-  pinMode(IndicatorAmberLED, OUTPUT);
-  pinMode(IndicatorGreenLED, OUTPUT);
-  pinMode(IndicatorRedLED, OUTPUT);
-  //colour sensor LEDs 
-  pinMode(RedLED, OUTPUT);
-  pinMode(BlueLED, OUTPUT);
-  pinMode(GreenLED, OUTPUT);
-  //this is line follower setup (for testing)
-  Serial.begin(9600);                     //setting serial monitor at a default baund rate of 9600
-  delay(500);
-  Serial.println("Started !!");
-  delay(1000);
-  AFMS.begin();
-  //Proximity setup
-  pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
-  pinMode(echoPin, INPUT); // Sets the echoPin as an Input
-  Serial.begin(9600); // Starts the serial communication
-  //servo door shut at start
-  myservo.attach(servoPin); //links the servo variable to the pin which will control the action
-  myservo.write(180); //should be door shut (might need changing)
-}
 
-
-void loop() {
-  // put your main code here, to run repeatedly:
-  proximity_sensor();
-  while (proximity_sensor() > x) { // while no fruit, follow line
-    proximity_sensor();
-    line_follower();
-    //motor_control(); // takes line follower PID value and changes motor speeds to follow line 
-    LED_blink_amber(); 
-  }
-  //if (proximity_sensor() < x), this means a fruit has tripped sensor so stops moving by not including forward()
-  LED_const_amber();
-  is_ripe(); //function to blink the red test LED and take colour reading, ditto for blue, compare colour readings and return ripe = TRUE or FALSE. also lights indicator leds
-  if (is_ripe() == true) {
-    collect_fruit(); //easier to throw it all in a function
-  }
-  else {
-    go_round(); //this is going to be a fat fuction to leave line and join after unripe fruit
-  }
-  if(millis() > 9999999999) { //end of line condition need discussion, this is a dummy
-  reverse_at_end();
-  exit(0); //this stops the loop function (hopefully back at start line with full points woooo)
-  }
-  
-}
 
 void line_follower() {
   myMotorLeft->setSpeed(150*leftSteer);
   myMotorRight->setSpeed(150*rightSteer);
-  myMotorLeft->run(BACKWARD);
-  myMotorRight->run(BACKWARD);
+  myMotorLeft->run(FORWARD);
+  myMotorRight->run(FORWARD);
 
 
   
@@ -122,7 +60,7 @@ void line_follower() {
   Serial.println(left_light_s);
   Serial.print("Right Light reading: ");
   Serial.println(right_light_s); 
-  delay(200);
+  
   
   
   if ((left_light_s < threshold_left)) { //if left is below threshold then must have gone off the line, vary right
@@ -136,14 +74,7 @@ void line_follower() {
     leftSteer = 0.64; //vary these speeds however is best
     rightSteer = 1.5;
   }
-  else if (right_light_s < threshold_junction && left_light_s < threshold_junction) { // use this for the junction thing
-    onJunction = true;
-    unsigned long StartTime = millis();
-    while (StartTime - EndTime <= 3000) {
-      myMotorLeft->run(RELEASE);
-    }
-    EndTime = StartTime;
-  }
+  
   else{
       leftSteer = 1.0;
       rightSteer = 1.0;
@@ -151,7 +82,7 @@ void line_follower() {
 } 
 
 void collect_fruit() {
-  myservo.write(90); //open door
+  
   unsigned long StartTime = millis();
   StartTime = millis();
     while(millis() - StartTime <= 2500) {
@@ -160,7 +91,7 @@ void collect_fruit() {
      myMotorLeft->run(FORWARD);
      myMotorRight->run(FORWARD);
     }
-  myservo.write(180); //shut door
+  
 }
 
 float proximity_sensor() {
@@ -176,7 +107,7 @@ float proximity_sensor() {
 // Reads the echoPin, returns the sound wave travel time in microseconds
   duration = pulseIn(echoPin, HIGH);
 // Calculating the distance
-  distance= duration*0.034/2 + 1;
+  distance= duration*0.034/2;
 // Prints the distance on the Serial Monitor
   Serial.print("Distance: ");
   Serial.println(distance);
@@ -185,10 +116,21 @@ float proximity_sensor() {
 }
 
 void LED_blink_amber(){
-  digitalWrite(IndicatorAmberLED, HIGH);
-  delay(500);
-  digitalWrite(IndicatorAmberLED, LOW);
-  delay(500);
+  unsigned long currentMillis = millis();
+
+  if (currentMillis - previousMillis >= 500) {
+    // save the last time you blinked the LED
+    previousMillis = currentMillis;
+
+    // if the LED is off turn it on and vice-versa:
+    if (ledState == LOW) {
+      ledState = HIGH;
+    } else {
+      ledState = LOW;
+    }
+
+    // set the LED with the ledState of the variable:
+    digitalWrite(IndicatorAmberLED, ledState);
 }
 
 void LED_const_amber(){
@@ -245,6 +187,46 @@ float average(int * array) { //finds the average of an array of numbers
   return(float(sum/len));
 }
 
+
+void setup() {
+  // put your setup code here, to run once:
+  //INDICATOR LEDS
+  pinMode(IndicatorAmberLED, OUTPUT);
+  pinMode(IndicatorGreenLED, OUTPUT);
+  pinMode(IndicatorRedLED, OUTPUT);
+  //colour sensor LEDs 
+  pinMode(RedLED, OUTPUT);
+  pinMode(BlueLED, OUTPUT);
+  pinMode(GreenLED, OUTPUT);
+  //this is line follower setup (for testing)
+  Serial.begin(9600);                     //setting serial monitor at a default baund rate of 9600
+  delay(500);
+  Serial.println("Started !!");
+  delay(1000);
+  AFMS.begin();
+  //Proximity setup
+  pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
+  pinMode(echoPin, INPUT); // Sets the echoPin as an Input
+  Serial.begin(9600); // Starts the serial communication
+  //servo door shut at start
+  
+}
+
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  line_follower();
+  displacement = proximity_sensor();
+  }
+  if   (displacement < x), this means a fruit has tripped sensor so stops moving by not including forward()
+    LED_const_amber();
+    digitalWrite(IndicatorGreenLED,HIGH);
+    
+ 
+  
+}
+/*
+
 void go_round() {
   
   left_turn();
@@ -253,7 +235,7 @@ void go_round() {
   bool off_line = true; //so while loop starts
   unsigned long StartTime = millis();
   while (millis() - StartTime <= 1000 /*or off_line = true*/) { // will start arc NOT looking at sensor (as it moves off line) then after a time will continue arc till reaches line again
-    int left_light_s = analogRead(A1);
+    /*int left_light_s = analogRead(A1);
     int right_light_s = analogRead(A0);
    
     myMotorLeft->setSpeed(106*leftscale); //right turn arc around fruit (hopefully), adjust scales to arc around tighter/looser

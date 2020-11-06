@@ -1,10 +1,21 @@
 float leftSteer = 1.0;
 float rightSteer = 1.0;
-float threshold_right = 100;
-float threshold_left = 90; //vary these 2 parameters depending on lighting
-float threshold_junction = 70; //threshold for making a turn at the junction
+float threshold_right = 10;
+float threshold_left =10; //vary these 2 parameters depending on lighting
+float threshold_junction = 12; //threshold for making a turn at the junction
 unsigned long EndTime = 0;
 
+
+const int IndicatorAmberLED = 4; //these numbers need to be edited
+
+const int trigPin = 9;
+const int echoPin = 8;
+
+int ledState = LOW;
+float displacement;
+// defines variables
+long duration;
+int distance;
 
 #include <Wire.h>
 #include <Adafruit_MotorShield.h>
@@ -15,9 +26,6 @@ Adafruit_DCMotor *myMotorLeft = AFMS.getMotor(1); //request the left wheel motor
 Adafruit_DCMotor *myMotorRight = AFMS.getMotor(2);
 
 // sets up motor
-
-const byte trigPin = 2;
-const byte echoPin = 4;
 
 unsigned long time;
 
@@ -56,40 +64,42 @@ float readDistanceSensor() {
   Serial.println(distance);
   delay(2000);
 } */
-void loop(){
-  line_follower();
-}
 
-void line_follower() {
-  myMotorLeft->setSpeed(150*leftSteer);
-  myMotorRight->setSpeed(150*rightSteer);
-  myMotorLeft->run(BACKWARD);
-  myMotorRight->run(BACKWARD);
+
+void loop() {
+  myMotorLeft->setSpeed(255*leftSteer);
+  myMotorRight->setSpeed(255*rightSteer);
+  myMotorLeft->run(FORWARD);
+  myMotorRight->run(FORWARD);
 
 
   
-  int left_light_s = analogRead(A1);
-  int right_light_s = analogRead(A0);
+  int left_light_s = analogRead(A0);
+  int right_light_s = analogRead(A1);
   
   Serial.print("Left Light reading: ");
   Serial.println(left_light_s);
   Serial.print("Right Light reading: ");
   Serial.println(right_light_s); 
-  delay(200);
+ 
   
-  
+  int displacement = distance_measurer();
+  if (displacement < 7) {
+    myMotorLeft->run(RELEASE);
+    myMotorRight->run(RELEASE);
+  }
   if ((left_light_s < threshold_left)) { //if left is below threshold then must have gone off the line, vary right
-    Serial.println("Steer Right");
-    leftSteer = 1.5; //vary these speeds however is best
-    rightSteer = 0.64;
+    Serial.println("Steer Left");
+    leftSteer = 0.5; //vary these speeds however is best
+    rightSteer = 1;
   }
 
   else if ((right_light_s > threshold_right)) { //if left is below threshold then must have gone off the line, vary right
     Serial.println("Steer Right");
-    leftSteer = 0.64; //vary these speeds however is best
-    rightSteer = 1.5;
+    leftSteer = 1; //vary these speeds however is best
+    rightSteer = 0.5;
   }
-  
+  /*
   else if (right_light_s < threshold_junction && left_light_s < threshold_junction) { // use this for the junction thing
     onJunction = true;
     unsigned long StartTime = millis();
@@ -99,9 +109,10 @@ void line_follower() {
     EndTime = StartTime;
   }
   */
+  
   else{
-      leftSteer = 1.0;
-      rightSteer = 1.0;
+      leftSteer = 1;
+      rightSteer = 1;
   }
 /*
   float distance = readDistanceSensor();
@@ -114,5 +125,27 @@ void line_follower() {
     } */ 
   
   
+
+}
+float distance_measurer() {
+
+digitalWrite(trigPin, LOW);
+unsigned long StartTime = millis();
+// Sets the trigPin on HIGH state for 10 micro seconds
+if (StartTime - EndTime >=  2000) {
+digitalWrite(trigPin, HIGH);
+}
+if (StartTime - EndTime >=12000) {
+digitalWrite(trigPin, LOW);
+}
+// Reads the echoPin, returns the sound wave travel time in microseconds
+duration = pulseIn(echoPin, HIGH);
+// Calculating the distance
+distance= duration*0.034/2 ;
+// Prints the distance on the Serial Monitor
+Serial.print("Distance: ");
+Serial.println(distance);
+return distance;
+
 
 }
