@@ -33,7 +33,11 @@ int flag = 0; */
 
 //proximity
 const int trigPin = 9;
+<<<<<<< Updated upstream
 const int echoPin = 10;
+=======
+const int echoPin = 10; //pins to connect echo and trig
+>>>>>>> Stashed changes
 long duration; //will store how long the sound wave takes to travel
 double distance; // will store distance measurement
 const int x = 5; //this is the proximity threshold
@@ -43,6 +47,10 @@ unsigned long EndTime = 0;
 const int IndicatorRedLED = 13; //number of RedLED
 const int IndicatorAmberLED = 10; //these numbers need to be edited
 const int IndicatorGreenLED = 11; //number of GreenLED
+<<<<<<< Updated upstream
+=======
+int ledState = LOW;
+>>>>>>> Stashed changes
 
 //colour sensor
 const int RedLED = 13; //number of RedLED
@@ -80,7 +88,35 @@ void setup() {
   myservo.attach(servoPin); //links the servo variable to the pin which will control the action
   myservo.write(180); //should be door shut (might need changing)
 }
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  proximity_sensor();
+  while (proximity_sensor() > x) { // while no fruit, follow line
+    proximity_sensor();
+    line_follower();
+    //motor_control(); // takes line follower PID value and changes motor speeds to follow line 
+    LED_blink_amber(); 
+  }
+  //if (proximity_sensor() < x), this means a fruit has tripped sensor so stops moving by not including forward()
+  LED_const_amber();
+  is_ripe(); //function to blink the red test LED and take colour reading, ditto for blue, compare colour readings and return ripe = TRUE or FALSE. also lights indicator leds
+  if (is_ripe() == true) {
+    collect_fruit(); //easier to throw it all in a function
+  }
+  else {
+    go_round(); //this is going to be a fat fuction to leave line and join after unripe fruit
+  }
+  if(millis() > 9999999999) { //end of line condition need discussion, this is a dummy
+  reverse_at_end();
+  exit(0); //this stops the loop function (hopefully back at start line with full points woooo)
+  }
+  
+}
 
 void loop() {
   // put your main code here, to run repeatedly:
@@ -111,12 +147,16 @@ void line_follower() {
   myMotorLeft->setSpeed(150*leftSteer);
   myMotorRight->setSpeed(150*rightSteer);
   myMotorLeft->run(BACKWARD);
+<<<<<<< Updated upstream
   myMotorRight->run(BACKWARD);
+=======
+  myMotorRight->run(BACKWARD); //runs the motors
+>>>>>>> Stashed changes
 
 
   
   int left_light_s = analogRead(A1);
-  int right_light_s = analogRead(A0);
+  int right_light_s = analogRead(A0); //stores the brightness levels on each sensor
   
   Serial.print("Left Light reading: ");
   Serial.println(left_light_s);
@@ -145,7 +185,7 @@ void line_follower() {
     EndTime = StartTime;
   }
   else{
-      leftSteer = 1.0;
+      leftSteer = 1.0; //move at normal speed
       rightSteer = 1.0;
   }
 } 
@@ -154,7 +194,7 @@ void collect_fruit() {
   myservo.write(90); //open door
   unsigned long StartTime = millis();
   StartTime = millis();
-    while(millis() - StartTime <= 2500) {
+    while(millis() - StartTime <= 2500) { //move forward for 2.5s
      myMotorLeft->setSpeed(120);
      myMotorRight->setSpeed(120);
      myMotorLeft->run(FORWARD);
@@ -167,10 +207,10 @@ float proximity_sensor() {
   digitalWrite(trigPin, LOW);
   unsigned long StartTime = millis();
 // Sets the trigPin on HIGH state for 10 micro seconds
-  if (StartTime - EndTime >=  2000) { //should this be while???
+  if (StartTime - EndTime >=  2000) { 
     digitalWrite(trigPin, HIGH);
 }
-  if (StartTime - EndTime >=12000) { //ditto
+  if (StartTime - EndTime >=12000) { 
     digitalWrite(trigPin, LOW);
 }
 // Reads the echoPin, returns the sound wave travel time in microseconds
@@ -185,14 +225,32 @@ float proximity_sensor() {
 }
 
 void LED_blink_amber(){
+<<<<<<< Updated upstream
   digitalWrite(IndicatorAmberLED, HIGH);
   delay(500);
   digitalWrite(IndicatorAmberLED, LOW);
   delay(500);
+=======
+  unsigned long StarTime = millis();
+
+  if (StartTime - EndTime >= 500) {
+    // save the last time you blinked the LED
+    EndTime = StartTime;
+
+    // if the LED is off turn it on and vice-versa:
+    if (ledState == LOW) {
+      ledState = HIGH;
+    } else {
+      ledState = LOW;
+    }
+
+    // set the LED with the ledState of the variable:
+    digitalWrite(IndicatorAmberLED, ledState);
+>>>>>>> Stashed changes
 }
 
 void LED_const_amber(){
-  digitalWrite(IndicatorAmberLED, HIGH);
+  digitalWrite(IndicatorAmberLED, HIGH); //turns AmberLED on
 }
 
 bool is_ripe() {
