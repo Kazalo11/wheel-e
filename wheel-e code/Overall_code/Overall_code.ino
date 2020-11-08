@@ -33,11 +33,8 @@ int flag = 0; */
 
 //proximity
 const int trigPin = 9;
-<<<<<<< Updated upstream
-const int echoPin = 10;
-=======
 const int echoPin = 10; //pins to connect echo and trig
->>>>>>> Stashed changes
+
 long duration; //will store how long the sound wave takes to travel
 double distance; // will store distance measurement
 const int x = 5; //this is the proximity threshold
@@ -47,10 +44,8 @@ unsigned long EndTime = 0;
 const int IndicatorRedLED = 13; //number of RedLED
 const int IndicatorAmberLED = 10; //these numbers need to be edited
 const int IndicatorGreenLED = 11; //number of GreenLED
-<<<<<<< Updated upstream
-=======
-int ledState = LOW;
->>>>>>> Stashed changes
+int ledState = LOW; //whether LED is on or off
+
 
 //colour sensor
 const int RedLED = 13; //number of RedLED
@@ -88,10 +83,7 @@ void setup() {
   myservo.attach(servoPin); //links the servo variable to the pin which will control the action
   myservo.write(180); //should be door shut (might need changing)
 }
-<<<<<<< Updated upstream
 
-=======
->>>>>>> Stashed changes
 
 void loop() {
   // put your main code here, to run repeatedly:
@@ -147,11 +139,8 @@ void line_follower() {
   myMotorLeft->setSpeed(150*leftSteer);
   myMotorRight->setSpeed(150*rightSteer);
   myMotorLeft->run(BACKWARD);
-<<<<<<< Updated upstream
-  myMotorRight->run(BACKWARD);
-=======
   myMotorRight->run(BACKWARD); //runs the motors
->>>>>>> Stashed changes
+
 
 
   
@@ -225,13 +214,7 @@ float proximity_sensor() {
 }
 
 void LED_blink_amber(){
-<<<<<<< Updated upstream
-  digitalWrite(IndicatorAmberLED, HIGH);
-  delay(500);
-  digitalWrite(IndicatorAmberLED, LOW);
-  delay(500);
-=======
-  unsigned long StarTime = millis();
+  unsigned long StartTime = millis();
 
   if (StartTime - EndTime >= 500) {
     // save the last time you blinked the LED
@@ -246,7 +229,6 @@ void LED_blink_amber(){
 
     // set the LED with the ledState of the variable:
     digitalWrite(IndicatorAmberLED, ledState);
->>>>>>> Stashed changes
 }
 
 void LED_const_amber(){
